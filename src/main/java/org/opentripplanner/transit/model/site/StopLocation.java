@@ -129,6 +129,11 @@ public interface StopLocation extends LogInfo {
     return null;
   }
 
+  @Nullable
+  default String getMunicipality() {
+    return null;
+  }
+
   boolean isPartOfStation();
 
   @Nonnull

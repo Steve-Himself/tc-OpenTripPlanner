@@ -56,4 +56,8 @@ class StopMappingWrapper {
       ? null
       : new FeedScopedId(stop.getId().getAgencyId(), stop.getParentStation());
   }
+
+  public String getMunicipality() {
+    return stop.getMunicipality();
+  }
 }

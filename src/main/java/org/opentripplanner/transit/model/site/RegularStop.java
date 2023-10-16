@@ -37,6 +37,8 @@ public final class RegularStop
 
   private final Set<FareZone> fareZones;
 
+  private final String municipality;
+
   RegularStop(RegularStopBuilder builder) {
     super(builder);
     this.index = INDEX_COUNTER.getAndIncrement();
@@ -47,6 +49,8 @@ public final class RegularStop
     this.netexVehicleSubmode = SubMode.getOrBuildAndCacheForever(builder.netexVehicleSubmode());
     this.boardingAreas = setOfNullSafe(builder.boardingAreas());
     this.fareZones = setOfNullSafe(builder.fareZones());
+    this.municipality = builder.municipality();
+
     if (isPartOfStation()) {
       getParentStation().addChildStop(this);
     }
@@ -89,6 +93,12 @@ public final class RegularStop
       return getParentStation().getTimezone();
     }
     return null;
+  }
+
+  @Override
+  @Nullable
+  public String getMunicipality() {
+    return municipality;
   }
 
   /**
@@ -150,7 +160,8 @@ public final class RegularStop
       Objects.equals(gtfsVehicleType, other.gtfsVehicleType) &&
       Objects.equals(netexVehicleSubmode, other.netexVehicleSubmode) &&
       Objects.equals(boardingAreas, other.boardingAreas) &&
-      Objects.equals(fareZones, other.fareZones)
+      Objects.equals(fareZones, other.fareZones) &&
+      Objects.equals(municipality, other.municipality)
     );
   }
 

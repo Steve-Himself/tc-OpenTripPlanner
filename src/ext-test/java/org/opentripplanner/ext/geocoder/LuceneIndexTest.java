@@ -121,7 +121,10 @@ class LuceneIndexTest {
   void stopLocations() {
     var result1 = index.queryStopLocations("lich", true).toList();
     assertEquals(1, result1.size());
-    assertEquals(LICHTERFELDE_OST_1.getName().toString(), result1.get(0).getName().toString());
+    assertEquals(
+      LICHTERFELDE_OST_1.getName().toString(),
+      result1.get(0).value().getName().toString()
+    );
 
     var result2 = index.queryStopLocations("alexan", true).collect(Collectors.toSet());
     assertEquals(Set.of(ALEXANDERPLATZ_BUS, ALEXANDERPLATZ_RAIL), result2);
@@ -161,7 +164,7 @@ class LuceneIndexTest {
     void deduplicatedStopClusters() {
       var result = index.queryStopClusters("lich").toList();
       assertEquals(1, result.size());
-      assertEquals(LICHTERFELDE_OST_1.getName().toString(), result.get(0).name());
+      assertEquals(LICHTERFELDE_OST_1.getName().toString(), result.get(0).value().name());
     }
 
     @ParameterizedTest
@@ -179,7 +182,7 @@ class LuceneIndexTest {
     void stopCode() {
       var result = index.queryStopClusters(ARTS_CENTER.getCode()).toList();
       assertEquals(1, result.size());
-      assertEquals(ARTS_CENTER.getName().toString(), result.get(0).name());
+      assertEquals(ARTS_CENTER.getName().toString(), result.get(0).value().name());
     }
 
     @Test
@@ -187,8 +190,8 @@ class LuceneIndexTest {
       var result = index.queryStopClusters("westh").toList();
       assertEquals(1, result.size());
       var stop = result.get(0);
-      assertEquals(WESTHAFEN.getName().toString(), stop.name());
-      assertEquals(List.of(FERRY.name(), BUS.name()), stop.modes());
+      assertEquals(WESTHAFEN.getName().toString(), stop.value().name());
+      assertEquals(List.of(FERRY.name(), BUS.name()), stop.value().modes());
     }
   }
 }

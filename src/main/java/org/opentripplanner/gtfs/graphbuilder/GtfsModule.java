@@ -270,12 +270,12 @@ public class GtfsModule implements GraphBuilderModule {
   }
 
   private GtfsMutableRelationalDao loadBundle(GtfsBundle gtfsBundle) throws IOException {
-    StoreImpl store = new StoreImpl(new GtfsRelationalDaoImpl());
+    GtfsRelationalDaoImpl dao = new GtfsRelationalDaoImpl();
+    StoreImpl store = new StoreImpl(dao);
     store.open();
     LOG.info("reading {}", gtfsBundle.toString());
 
     GtfsFeedId gtfsFeedId = gtfsBundle.getFeedId();
-
     GtfsReader reader = new GtfsReader();
     reader.setInputSource(gtfsBundle.getCsvInputSource());
     reader.setEntityStore(store);
@@ -356,6 +356,14 @@ public class GtfsModule implements GraphBuilderModule {
     }
     for (Pathway pathway : store.getAllEntitiesForType(Pathway.class)) {
       pathway.getId().setAgencyId(reader.getDefaultAgencyId());
+    }
+
+    try {
+      GtfsTransformer transformer = new GtfsTransformer(reader, dao);
+      transformer.addTransform(new MergeStopFromStopExtStrategy());
+      transformer.run();
+    } catch (Exception e) {
+      LOG.error("Transform failed: {}", e.getMessage());
     }
 
     store.close();

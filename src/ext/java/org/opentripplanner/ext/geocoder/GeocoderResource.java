@@ -11,6 +11,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -56,7 +57,7 @@ public class GeocoderResource {
     @QueryParam("query") String query,
     @QueryParam("autocomplete") @DefaultValue("false") boolean autocomplete,
     @QueryParam("stops") @DefaultValue("true") boolean stops,
-    @QueryParam("clusters") @DefaultValue("false") boolean clusters,
+    @QueryParam("clusters") @DefaultValue("true") boolean clusters,
     @QueryParam("corners") @DefaultValue("true") boolean corners
   ) {
     return Response
@@ -82,18 +83,19 @@ public class GeocoderResource {
   ) {
     List<SearchResult> results = new ArrayList<>();
 
-    if (stops) {
-      results.addAll(queryStopLocations(query, autocomplete));
-    }
-
     if (clusters) {
       results.addAll(queryStations(query, autocomplete));
+    }
+
+    if (stops) {
+      results.addAll(queryStopLocations(query, autocomplete));
     }
 
     if (corners) {
       results.addAll(queryCorners(query, autocomplete));
     }
 
+    results.sort(Comparator.comparingDouble(SearchResult::getScore).reversed());
     return results;
   }
 
@@ -101,12 +103,13 @@ public class GeocoderResource {
     return LuceneIndex
       .forServer(serverContext)
       .queryStopLocations(query, autocomplete)
-      .map(sl ->
+      .map(sd ->
         new SearchResult(
-          sl.getCoordinate().latitude(),
-          sl.getCoordinate().longitude(),
-          stringifyStopLocation(sl),
-          FeedScopedIdMapper.mapToApi(sl.getId())
+          sd.value().getCoordinate().latitude(),
+          sd.value().getCoordinate().longitude(),
+          stringifyStopLocation(sd.value()),
+          FeedScopedIdMapper.mapToApi(sd.value().getId()),
+          sd.score()
         )
       )
       .collect(Collectors.toList());
@@ -116,12 +119,13 @@ public class GeocoderResource {
     return LuceneIndex
       .forServer(serverContext)
       .queryStopLocationGroups(query, autocomplete)
-      .map(sc ->
+      .map(sd ->
         new SearchResult(
-          sc.getCoordinate().latitude(),
-          sc.getCoordinate().longitude(),
-          Objects.toString(sc.getName()),
-          FeedScopedIdMapper.mapToApi(sc.getId())
+          sd.value().getCoordinate().latitude(),
+          sd.value().getCoordinate().longitude(),
+          Objects.toString(sd.value().getName()),
+          FeedScopedIdMapper.mapToApi(sd.value().getId()),
+          sd.score()
         )
       )
       .collect(Collectors.toList());
@@ -131,8 +135,16 @@ public class GeocoderResource {
     return LuceneIndex
       .forServer(serverContext)
       .queryStreetVertices(query, autocomplete)
-      .map(v ->
-        new SearchResult(v.getLat(), v.getLon(), stringifyStreetVertex(v), v.getLabelString())
+      .filter(Objects::nonNull)
+      .filter(f -> f.value() != null)
+      .map(sd ->
+        new SearchResult(
+          sd.value().getLat(),
+          sd.value().getLon(),
+          stringifyStreetVertex(sd.value()),
+          sd.value().getLabelString(),
+          sd.score()
+        )
       )
       .collect(Collectors.toList());
   }
@@ -153,12 +165,18 @@ public class GeocoderResource {
     public double lng;
     public String description;
     public String id;
+    public float score;
 
-    private SearchResult(double lat, double lng, String description, String id) {
+    private SearchResult(double lat, double lng, String description, String id, float score) {
       this.lat = lat;
       this.lng = lng;
       this.description = description;
       this.id = id;
+      this.score = score;
+    }
+
+    public float getScore() {
+      return score;
     }
   }
 }

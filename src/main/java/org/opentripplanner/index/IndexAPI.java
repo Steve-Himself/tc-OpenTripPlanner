@@ -30,6 +30,7 @@ import org.opentripplanner.api.mapping.AlertMapper;
 import org.opentripplanner.api.mapping.FeedInfoMapper;
 import org.opentripplanner.api.mapping.FeedScopedIdMapper;
 import org.opentripplanner.api.mapping.RouteMapper;
+import org.opentripplanner.api.mapping.StopGroupMapper;
 import org.opentripplanner.api.mapping.StopMapper;
 import org.opentripplanner.api.mapping.StopTimesInPatternMapper;
 import org.opentripplanner.api.mapping.TransferMapper;
@@ -43,6 +44,7 @@ import org.opentripplanner.api.model.ApiPatternShort;
 import org.opentripplanner.api.model.ApiRoute;
 import org.opentripplanner.api.model.ApiRouteShort;
 import org.opentripplanner.api.model.ApiStop;
+import org.opentripplanner.api.model.ApiStopGroupShort;
 import org.opentripplanner.api.model.ApiStopShort;
 import org.opentripplanner.api.model.ApiStopTimesInPattern;
 import org.opentripplanner.api.model.ApiTransfer;
@@ -228,6 +230,14 @@ public class IndexAPI {
         .map(StopMapper::mapToApiShort)
         .toList();
     }
+  }
+
+  /** Return a list of all stops within a circle around the given coordinate. */
+  @SuppressWarnings("ConstantConditions")
+  @GET
+  @Path("/stopGroups")
+  public List<ApiStopGroupShort> getStopsGroupsInRadius() {
+    return StopGroupMapper.mapToApiShort(transitService().listStopLocationGroups());
   }
 
   @GET

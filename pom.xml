@@ -73,7 +73,7 @@
         <jaxb-runtime.version>3.0.2</jaxb-runtime.version>
         <!-- Other properties -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <GITHUB_REPOSITORY>opentripplanner/OpenTripPlanner</GITHUB_REPOSITORY>
+        <GITHUB_REPOSITORY>Steve-Himself/tc-OpenTripPlanner</GITHUB_REPOSITORY>
         <!-- Set argLine to an empty string so that running the tests without the coverage agent works.
              When running `mvn jacoco:prepare-agent test` argLine is replaced with the one activating the agent.
         -->
@@ -537,6 +537,10 @@
             <name>Onebusaway Releases Repo</name>
             <url>https://repo.camsys-apps.com/releases/</url>
         </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencyManagement>
@@ -863,6 +867,29 @@
         <!-- OBA GTFS loader -->
         <dependency>
             <groupId>org.onebusaway</groupId>
+            <artifactId>onebusaway-collections</artifactId>
+            <version>1.2.8</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.onebusaway</groupId>
+            <artifactId>onebusaway-csv-entities</artifactId>
+            <version>1.1.7</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!--
+        <dependency>
+            <groupId>org.onebusaway</groupId>
             <artifactId>onebusaway-gtfs</artifactId>
             <version>1.4.5</version>
             <exclusions>
@@ -872,6 +899,58 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.onebusaway</groupId>
+            <artifactId>onebusaway-gtfs-transformer</artifactId>
+            <version>1.4.5</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        -->
+
+        <dependency>
+            <groupId>com.github.Steve-Himself.tc-onebusaway-gtfs-modules</groupId>
+            <artifactId>onebusaway-gtfs</artifactId>
+            <version>aa913ffc</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.onebusaway</groupId>
+                    <artifactId>onebusaway-csv-entities</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.onebusaway</groupId>
+                    <artifactId>onebusaway-collections</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.github.Steve-Himself.tc-onebusaway-gtfs-modules</groupId>
+            <artifactId>onebusaway-gtfs-transformer</artifactId>
+            <version>aa913ffc</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-simple</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.onebusaway</groupId>
+                        <artifactId>onebusaway-csv-entities</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.onebusaway</groupId>
+                        <artifactId>onebusaway-collections</artifactId>
+                    </exclusion>
+                </exclusions>
+        </dependency>
+
         <!-- Processing is used for the debug GUI (though we could probably use just Java2D) -->
         <dependency>
             <groupId>org.processing</groupId>

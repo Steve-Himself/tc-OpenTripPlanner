@@ -628,6 +628,8 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
           return null;
         }
         previousTime = time;
+      } else if (stopTimeUpdate.hasDeparture() && stopTimeUpdate.getDeparture().hasTime()) {
+        debug(tripId, "Trip update misses arrival time, falling back to departure time.");
       } else {
         debug(tripId, "Trip update misses arrival time, skipping.");
         return null;
@@ -1156,7 +1158,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
 
   private static void debug(String feedId, String tripId, String message, Object... params) {
     String m = "[feedId: %s, tripId: %s] %s".formatted(feedId, tripId, message);
-    LOG.debug(m, params);
+    LOG.info(m, params);
   }
 
   private enum CancelationType {

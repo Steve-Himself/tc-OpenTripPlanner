@@ -54,7 +54,8 @@ class StopMapper {
       .withWheelchairAccessibility(base.getWheelchairAccessibility())
       .withLevel(base.getLevel())
       .withPlatformCode(gtfsStop.getPlatformCode())
-      .withVehicleType(TransitModeMapper.mapMode(gtfsStop.getVehicleType()));
+      .withVehicleType(TransitModeMapper.mapMode(gtfsStop.getVehicleType()))
+      .withMunicipality(base.getMunicipality());
 
     builder.withName(
       translationHelper.getTranslation(

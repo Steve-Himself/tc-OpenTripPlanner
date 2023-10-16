@@ -4,31 +4,16 @@ package org.opentripplanner.api.model;
 import java.io.Serializable;
 import java.util.Objects;
 
-public class ApiStop implements Serializable {
+public class ApiStopGroup implements Serializable {
 
   public String id;
   public String name;
   public Double lat;
   public Double lon;
-  public String code;
   public String desc;
   public String zoneId;
   public String url;
   public Integer locationType;
-
-  /** The fully qualified parent station id including the feedId. */
-  public String stationId;
-
-  /** @deprecated Use "stationId" instead */
-  @Deprecated
-  public String parentStation;
-
-  public Integer wheelchairBoarding;
-  public String direction;
-  private String timezone;
-  private Integer vehicleType;
-  private String platformCode;
-  public String municipality;
 
   @Override
   public int hashCode() {
@@ -43,7 +28,7 @@ public class ApiStop implements Serializable {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ApiStop apiStop = (ApiStop) o;
+    ApiStopGroup apiStop = (ApiStopGroup) o;
     return id.equals(apiStop.id);
   }
 

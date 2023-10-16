@@ -27,6 +27,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.suggest.document.Completion90PostingsFormat;
 import org.apache.lucene.search.suggest.document.CompletionAnalyzer;
@@ -48,6 +49,8 @@ import org.opentripplanner.transit.model.site.StopLocationsGroup;
 import org.opentripplanner.transit.service.TransitService;
 
 public class LuceneIndex implements Serializable {
+
+  public record ScoredResult<T>(T value, float score) {}
 
   private static final String TYPE = "type";
   private static final String ID = "id";
@@ -169,19 +172,40 @@ public class LuceneIndex implements Serializable {
     return newIndex;
   }
 
-  public Stream<StopLocation> queryStopLocations(String query, boolean autocomplete) {
+  public Stream<ScoredResult<StopLocation>> queryStopLocations(String query, boolean autocomplete) {
     return matchingDocuments(StopLocation.class, query, autocomplete)
-      .map(document -> transitService.getStopLocation(FeedScopedId.parse(document.get(ID))));
+      .map(document ->
+        new ScoredResult<>(
+          transitService.getStopLocation(FeedScopedId.parse(document.value.get(ID))),
+          document.score
+        )
+      );
   }
 
-  public Stream<StopLocationsGroup> queryStopLocationGroups(String query, boolean autocomplete) {
+  public Stream<ScoredResult<StopLocationsGroup>> queryStopLocationGroups(
+    String query,
+    boolean autocomplete
+  ) {
     return matchingDocuments(StopLocationsGroup.class, query, autocomplete)
-      .map(document -> transitService.getStopLocationsGroup(FeedScopedId.parse(document.get(ID))));
+      .map(document ->
+        new ScoredResult<>(
+          transitService.getStopLocationsGroup(FeedScopedId.parse(document.value.get(ID))),
+          document.score
+        )
+      );
   }
 
-  public Stream<StreetVertex> queryStreetVertices(String query, boolean autocomplete) {
+  public Stream<ScoredResult<StreetVertex>> queryStreetVertices(
+    String query,
+    boolean autocomplete
+  ) {
     return matchingDocuments(StreetVertex.class, query, autocomplete)
-      .map(document -> (StreetVertex) graph.getVertex(VertexLabel.string(document.get(ID))));
+      .map(document ->
+        new ScoredResult<>(
+          (StreetVertex) graph.getVertex(VertexLabel.string(document.value.get(ID))),
+          document.score
+        )
+      );
   }
 
   /**
@@ -193,18 +217,22 @@ public class LuceneIndex implements Serializable {
    *  - If two stops have the same name *and* are less than 10 meters from each other, only
    *    one of those is chosen at random and returned.
    */
-  public Stream<StopCluster> queryStopClusters(String query) {
+  public Stream<ScoredResult<StopCluster>> queryStopClusters(String query) {
     return matchingDocuments(StopCluster.class, query, true).map(LuceneIndex::toStopCluster);
   }
 
-  private static StopCluster toStopCluster(Document document) {
+  private static ScoredResult<StopCluster> toStopCluster(ScoredResult<Document> scoredDocument) {
+    var document = scoredDocument.value;
     var id = FeedScopedId.parse(document.get(ID));
     var name = document.get(NAME);
     var code = document.get(CODE);
     var lat = document.getField(LAT).numericValue().doubleValue();
     var lon = document.getField(LON).numericValue().doubleValue();
     var modes = Arrays.asList(document.getValues(MODE));
-    return new StopCluster(id, code, name, new Coordinate(lat, lon), modes);
+    return new ScoredResult<>(
+      new StopCluster(id, code, name, new Coordinate(lat, lon), modes),
+      scoredDocument.score
+    );
   }
 
   static IndexWriterConfig iwcWithSuggestField(Analyzer analyzer, final Set<String> suggestFields) {
@@ -235,7 +263,7 @@ public class LuceneIndex implements Serializable {
     Collection<String> modes
   ) {
     String typeName = type.getSimpleName();
-
+    int weight = type == StopCluster.class ? 2 : 1;
     Document document = new Document();
     document.add(new StoredField(ID, id));
     document.add(new TextField(TYPE, typeName, Store.YES));
@@ -260,7 +288,7 @@ public class LuceneIndex implements Serializable {
     }
   }
 
-  private Stream<Document> matchingDocuments(
+  private Stream<ScoredResult<Document>> matchingDocuments(
     Class<?> type,
     String searchTerms,
     boolean autocomplete
@@ -287,7 +315,7 @@ public class LuceneIndex implements Serializable {
           .stream(topDocs.scoreDocs)
           .map(scoreDoc -> {
             try {
-              return searcher.doc(scoreDoc.doc);
+              return new ScoredResult(searcher.doc(scoreDoc.doc), scoreDoc.score);
             } catch (IOException e) {
               throw new RuntimeException(e);
             }
@@ -296,8 +324,10 @@ public class LuceneIndex implements Serializable {
         var parser = new QueryParser(CODE, analyzer);
         var nameQuery = parser.createPhraseQuery(NAME, searchTerms);
         var codeQuery = new TermQuery(new Term(CODE, analyzer.normalize(CODE, searchTerms)));
-        var typeQuery = new TermQuery(
-          new Term(TYPE, analyzer.normalize(TYPE, type.getSimpleName()))
+        float weight = type == StopCluster.class ? 2.0f : 1.0f;
+        var typeQuery = new BoostQuery(
+          new TermQuery(new Term(TYPE, analyzer.normalize(TYPE, type.getSimpleName()))),
+          weight
         );
 
         var builder = new BooleanQuery.Builder()
@@ -317,7 +347,7 @@ public class LuceneIndex implements Serializable {
           .stream(topDocs.scoreDocs)
           .map(scoreDoc -> {
             try {
-              return searcher.doc(scoreDoc.doc);
+              return new ScoredResult(searcher.doc(scoreDoc.doc), scoreDoc.score);
             } catch (IOException e) {
               throw new RuntimeException(e);
             }

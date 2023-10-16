@@ -30,6 +30,8 @@ public final class RegularStopBuilder
 
   private final Set<FareZone> fareZones = new HashSet<>();
 
+  private String municipality;
+
   RegularStopBuilder(FeedScopedId id) {
     super(id);
   }
@@ -41,6 +43,7 @@ public final class RegularStopBuilder
     this.timeZone = original.getTimeZone();
     this.gtfsVehicleType = original.getGtfsVehicleType();
     this.netexVehicleSubmode = original.getNetexVehicleSubmode().name();
+    this.municipality = original.getMunicipality();
   }
 
   public String platformCode() {
@@ -49,6 +52,11 @@ public final class RegularStopBuilder
 
   public RegularStopBuilder withPlatformCode(String platformCode) {
     this.platformCode = platformCode;
+    return this;
+  }
+
+  public RegularStopBuilder withMunicipality(String municipality) {
+    this.municipality = municipality;
     return this;
   }
 
@@ -104,6 +112,10 @@ public final class RegularStopBuilder
 
   public Collection<BoardingArea> boardingAreas() {
     return boardingAreas;
+  }
+
+  public String municipality() {
+    return municipality;
   }
 
   @Override

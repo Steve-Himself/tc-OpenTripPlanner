@@ -43,6 +43,7 @@ public class StopMapper {
       api.wheelchairBoarding =
         WheelchairAccessibilityMapper.mapToApi(domain.getWheelchairAccessibility());
       //api.direction = stop.getDirection();
+      api.municipality = domain.getMunicipality();
     }
     return api;
   }
